@@ -98,7 +98,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.PAT }}
-          repository: Mindfield-Biosystems-Ltd/rustdesk
+          repository: davidramiro/rd-mf
           ref: refs/tags/${{ env.VERSION }}
           submodules: recursive
   
@@ -107,7 +107,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.PAT }}
-          repository: Mindfield-Biosystems-Ltd/rustdesk
+          repository: davidramiro/rd-mf
           submodules: recursive
 
       - name: Restore bridge files
