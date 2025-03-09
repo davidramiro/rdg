@@ -13,17 +13,6 @@ on:
         required: true
         default: ''
         type: string
-      appname:
-        description: "app name"
-        required: true
-        default: 'rustdesk'
-        type: string
-      filename:
-        description: "Filename"
-        required: true
-        default: 'rustdesk'
-        type: string
-
 
 env:
   SCITER_RUST_VERSION: "1.75" # https://github.com/rustdesk/rustdesk/discussions/7503, also 1.78 has ABI change which causes our sciter version not working, https://blog.rust-lang.org/2024/03/30/i128-layout-update.html
@@ -34,7 +23,6 @@ env:
   LLVM_VERSION: "15.0.6"
   FLUTTER_VERSION: "3.24.5"
   ANDROID_FLUTTER_VERSION: "3.24.5" 
-  FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
   # for arm64 linux because official Dart SDK does not work
   FLUTTER_ELINUX_VERSION: "3.16.9"
   TAG_NAME: "${{ inputs.upload-tag }}"
@@ -101,7 +89,7 @@ jobs:
           repository: davidramiro/rd-mf
           ref: refs/tags/${{ env.VERSION }}
           submodules: recursive
-  
+
       - name: Checkout source code
         if: ${{ env.VERSION == 'master' }}
         uses: actions/checkout@v4
@@ -126,30 +114,65 @@ jobs:
         run: |
           sed -i -e 's|2ded7f146437a761ffe6981e2f742038f85ca68d|08a471bb8ceccdd50483c81cdfa8b81b07b14b87|' ./flutter/pubspec.lock
           sed -i -e 's|2ded7f146437a761ffe6981e2f742038f85ca68d|08a471bb8ceccdd50483c81cdfa8b81b07b14b87|' ./flutter/pubspec.yaml
-
+      
       - name: change appname to custom
-        if: inputs.appname != 'rustdesk'
         continue-on-error: true
         shell: bash
         run: |
           # ./Cargo.toml
-          sed -i -e 's|description = "RustDesk Remote Desktop"|description = "${{ inputs.appname }}"|' ./Cargo.toml
-          sed -i -e 's|ProductName = "RustDesk"|ProductName = "${{ inputs.appname }}"|' ./Cargo.toml
-          sed -i -e 's|FileDescription = "RustDesk Remote Desktop"|FileDescription = "${{ inputs.appname }}"|' ./Cargo.toml
-          sed -i -e 's|OriginalFilename = "rustdesk.exe"|OriginalFilename = "${{ inputs.appname }}.exe"|' ./Cargo.toml
+          sed -i -e 's|description = "RustDesk Remote Desktop"|description = "MindfieldConnect"|' ./Cargo.toml
+          sed -i -e 's|ProductName = "RustDesk"|ProductName = "MindfieldConnect"|' ./Cargo.toml
+          sed -i -e 's|FileDescription = "RustDesk Remote Desktop"|FileDescription = "MindfieldConnect"|' ./Cargo.toml
+          sed -i -e 's|OriginalFilename = "rustdesk.exe"|OriginalFilename = "MindfieldConnect.exe"|' ./Cargo.toml
           # ./libs/portable/Cargo.toml
-          sed -i -e 's|description = "RustDesk Remote Desktop"|description = "${{ inputs.appname }}"|' ./libs/portable/Cargo.toml
-          sed -i -e 's|ProductName = "RustDesk"|ProductName = "${{ inputs.appname }}"|' ./libs/portable/Cargo.toml
-          sed -i -e 's|FileDescription = "RustDesk Remote Desktop"|FileDescription = "${{ inputs.appname }}"|' ./libs/portable/Cargo.toml
-          sed -i -e 's|OriginalFilename = "rustdesk.exe"|OriginalFilename = "${{ inputs.appname }}.exe"|' ./libs/portable/Cargo.toml
+          sed -i -e 's|description = "RustDesk Remote Desktop"|description = "MindfieldConnect"|' ./libs/portable/Cargo.toml
+          sed -i -e 's|ProductName = "RustDesk"|ProductName = "MindfieldConnect"|' ./libs/portable/Cargo.toml
+          sed -i -e 's|FileDescription = "RustDesk Remote Desktop"|FileDescription = "MindfieldConnect"|' ./libs/portable/Cargo.toml
+          sed -i -e 's|OriginalFilename = "rustdesk.exe"|OriginalFilename = "MindfieldConnect.exe"|' ./libs/portable/Cargo.toml
           # ./flutter/windows/runner/Runner.rc
-          sed -i -e 's|"RustDesk Remote Desktop"|"${{ inputs.appname }}"|' ./flutter/windows/runner/Runner.rc
-          sed -i -e 's|VALUE "InternalName", "rustdesk" "\0"|VALUE "InternalName", "${{ inputs.appname }}" "\0"|' ./flutter/windows/runner/Runner.rc
-          sed -i -e 's|"rustdesk.exe"|"${{ inputs.filename }}"|' ./flutter/windows/runner/Runner.rc
-          sed -i -e 's|"RustDesk"|"${{ inputs.appname }}"|' ./flutter/windows/runner/Runner.rc
+          sed -i -e 's|"RustDesk Remote Desktop"|"MindfieldConnect"|' ./flutter/windows/runner/Runner.rc
+          sed -i -e 's|VALUE "InternalName", "rustdesk" "\0"|VALUE "InternalName", "MindfieldConnect" "\0"|' ./flutter/windows/runner/Runner.rc
+          sed -i -e 's|"rustdesk.exe"|"mindfieldconnect.exe"|' ./flutter/windows/runner/Runner.rc
+          sed -i -e 's|"RustDesk"|"MindfieldConnect"|' ./flutter/windows/runner/Runner.rc
           # ./src/lang/en.rs
-          find ./src/lang -name "*.rs" -exec sed -i -e 's|RustDesk|${{ inputs.appname }}|' {} \;
+          find ./src/lang -name "*.rs" -exec sed -i -e 's|RustDesk|MindfieldConnect|' {} \;
           
+
+      - name: change company name
+        if: fromJson(inputs.extras).compname != 'Purslane Ltd'
+        continue-on-error: true
+        shell: bash
+        run: |
+          sed -i -e 's|Purslane Ltd|Mindfield Biosystems Ltd.|' ./flutter/lib/desktop/pages/desktop_setting_page.dart
+          sed -i -e 's|Purslane Ltd.|Mindfield Biosystems Ltd.|' ./res/setup.nsi
+          sed -i -e 's|PURSLANE|Mindfield Biosystems Ltd.|' ./res/msi/preprocess.py
+          sed -i -e 's|Purslane Ltd|Mindfield Biosystems Ltd.|' ./res/msi/preprocess.py
+          sed -i -e 's|"Copyright © 2025 Purslane Ltd. All rights reserved."|"Copyright © 2025 Mindfield Biosystems Ltd.. All rights reserved."|' ./flutter/windows/runner/Runner.rc
+          sed -i -e 's|Purslane Ltd|Mindfield Biosystems Ltd.|' ./flutter/windows/runner/Runner.rc
+          sed -i -e 's|Purslane Ltd|Mindfield Biosystems Ltd.|' ./Cargo.toml
+          sed -i -e 's|Purslane Ltd|Mindfield Biosystems Ltd.|' ./libs/portable/Cargo.toml
+             
+      - name: change url to custom
+        continue-on-error: true
+        shell: bash
+        run: |
+          sed -i -e 's|Homepage: https://rustdesk.com|Homepage: https://mindfield.de/|' ./build.py
+          sed -i -e "s|launchUrl(Uri.parse('https://rustdesk.com'));|launchUrl(Uri.parse('https://mindfield.de/'));|" ./flutter/lib/common.dart
+          sed -i -e "s|launchUrlString('https://rustdesk.com');|launchUrlString('https://mindfield.de/');|" ./flutter/lib/desktop/pages/desktop_setting_page.dart
+          sed -i -e "s|launchUrlString('https://rustdesk.com/privacy.html')|launchUrlString('https://mindfield-shop.com/datenschutz/')|" ./flutter/lib/desktop/pages/desktop_setting_page.dart
+          sed -i -e "s|const url = 'https://rustdesk.com/';|const url = 'https://mindfield.de/';|" ./flutter/lib/mobile/pages/settings_page.dart
+          sed -i -e "s|launchUrlString('https://rustdesk.com/privacy.html')|launchUrlString('https://mindfield-shop.com/datenschutz/')|" ./flutter/lib/mobile/pages/settings_page.dart
+          sed -i -e "s|https://rustdesk.com/privacy.html|https://mindfield-shop.com/datenschutz/|" ./flutter/lib/desktop/pages/install_page.dart
+          sed -i -e "s|https://rustdesk.com/|https://mindfield.de/|" ./res/setup.nsi
+
+      - name: change download link to custom
+        continue-on-error: true
+        shell: bash
+        run: |
+          sed -i -e 's|https://rustdesk.com/download|https://mindfield.de/downloads-de|' ./flutter/lib/desktop/pages/desktop_home_page.dart
+          sed -i -e 's|https://rustdesk.com/download|https://mindfield.de/downloads-de|' ./flutter/lib/mobile/pages/connection_page.dart
+          sed -i -e 's|https://rustdesk.com/download|https://mindfield.de/downloads-de|' ./src/ui/index.tis
+
       - name: set server, key, and apiserver
         continue-on-error: true
         shell: bash
@@ -204,11 +227,10 @@ jobs:
           targets: ${{ matrix.job.target }}
           components: "rustfmt"
 
-
       - uses: Swatinem/rust-cache@v2
         with:
           prefix-key: ${{ matrix.job.os }}
-        
+
 
       - name: Setup vcpkg with Github Actions binary cache
         uses: lukka/run-vcpkg@v11
@@ -249,6 +271,7 @@ jobs:
         run: | 
           Invoke-WebRequest -Uri https://raw.githubusercontent.com/bryangerlach/rdgen/refs/heads/master/.github/patches/removeNewVersionNotif.diff -Outfile removeNewVersionNotif.diff
           git apply removeNewVersionNotif.diff
+
 
       - name: replace flutter icons
         continue-on-error: true
@@ -304,7 +327,7 @@ jobs:
           name: topmostwindow-artifacts
           path: "./rustdesk"
 
-
+      
       - name: zip dlls
         continue-on-error: true
         shell: pwsh
@@ -333,22 +356,17 @@ jobs:
           Remove-Item ./rustdesk/unsigned_files.zip
           Remove-Item ./rustdesk/signed_files.zip
           
-
-      # - name: Create custom.txt file
-      #   shell: bash
-      #   run: |
-      #     echo -n "${{ inputs.custom }}" | cat > ./rustdesk/custom.txt
         
 
       - name: Build self-extracted executable
         shell: bash
         if: env.UPLOAD_ARTIFACT == 'true'
         run: |
-          mv "./rustdesk/rustdesk.exe" "./rustdesk/${{ inputs.appname }}.exe" || echo "rustdesk.exe"
+          mv "./rustdesk/rustdesk.exe" "./rustdesk/MindfieldConnect.exe" || echo "rustdesk.exe"
           sed -i '/dpiAware/d' res/manifest.xml
           pushd ./libs/portable
           pip3 install -r requirements.txt
-          python3 ./generate.py -f ../../rustdesk/ -o . -e "../../rustdesk/${{ inputs.appname }}.exe"
+          python3 ./generate.py -f ../../rustdesk/ -o . -e "../../rustdesk/MindfieldConnect.exe"
           popd
           mkdir -p ./SignOutput
           mv ./target/release/rustdesk-portable-packer.exe "./SignOutput/rustdesk.exe"
@@ -360,8 +378,8 @@ jobs:
         continue-on-error: true
         if: env.UPLOAD_ARTIFACT == 'true'
         run: |
-          $myappname = "${{ inputs.appname }}" -replace '\s','_'
-          cp "rustdesk/${{ inputs.appname }}.exe" "rustdesk/${myappname}.exe" -ErrorAction SilentlyContinue
+          $myappname = "MindfieldConnect" -replace '\s','_'
+          cp "rustdesk/MindfieldConnect.exe" "rustdesk/${myappname}.exe" -ErrorAction SilentlyContinue
           pushd ./res/msi
           python preprocess.py --app-name "$myappname" --arp -d ../../rustdesk
           nuget restore msi.sln
@@ -401,53 +419,9 @@ jobs:
 
       - name: rename rustdesk.exe to filename.exe
         run: |
-          mv ./SignOutput/rustdesk.exe "./SignOutput/${{ inputs.filename }}.exe" || echo "rustdesk"
+          mv ./SignOutput/rustdesk.exe "./SignOutput/mindfieldconnect.exe" || echo "rustdesk"
 
       - name: rename rustdesk.msi to filename.msi
         continue-on-error: true
         run: |
-          mv ./SignOutput/rustdesk.msi "./SignOutput/${{ inputs.filename }}.msi" || echo "rustdesk"
-
-
-      - name: Get current date
-        id: date
-        uses: Kaven-Universe/github-action-current-date-time@v1
-        with:
-          format: "YYYY_MM_DD HH_mm_ss"
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ env.VERSION }}
-          release_name: ${{ env.VERSION }} - Windows -  ${{ steps.date.outputs.time }}
-          body: |
-            Artifact from Windows RD build
-          draft: true
-          prerelease: false
-      - name: Upload release asset MSI
-        continue-on-error: true
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./SignOutput/${{ inputs.filename }}.msi
-          asset_name: ${{ inputs.filename }}.msi
-          asset_content_type: application/x-msi
-      - name: Upload release asset EXE
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./SignOutput/${{ inputs.filename }}.exe
-          asset_name: ${{ inputs.filename }}.exe
-          asset_content_type: application/x-msdownload
-      - name: Publish release
-        uses: StuYarrow/publish-release@v1.1.2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          id: ${{ steps.create_release.outputs.id }}
+          mv ./SignOutput/rustdesk.msi "./SignOutput/mindfieldconnect.msi" || echo "rustdesk"
