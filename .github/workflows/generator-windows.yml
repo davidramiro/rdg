@@ -424,11 +424,13 @@ jobs:
         continue-on-error: true
         run: |
           mv ./SignOutput/rustdesk.msi "./SignOutput/mindfieldconnect.msi" || echo "rustdesk"
-          - name: Get current date
-          id: date
-          uses: Kaven-Universe/github-action-current-date-time@v1
-          with:
-            format: "YYYY_MM_DD HH_mm_ss"
+
+
+      - name: Get current date
+        id: date
+        uses: Kaven-Universe/github-action-current-date-time@v1
+        with:
+          format: "YYYY_MM_DD HH_mm_ss"
 
       - name: Create release
         id: create_release
@@ -449,8 +451,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./SignOutput/${{ inputs.filename }}.msi
-          asset_name: ${{ inputs.filename }}.msi
+          asset_path: ./SignOutput/mindfieldconnect.msi
+          asset_name: mindfieldconnect.msi
           asset_content_type: application/x-msi
       - name: Upload release asset EXE
         uses: actions/upload-release-asset@v1
@@ -458,8 +460,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./SignOutput/${{ inputs.filename }}.exe
-          asset_name: ${{ inputs.filename }}.exe
+          asset_path: ./SignOutput/mindfieldconnect.exe
+          asset_name: mindfieldconnect.exe
           asset_content_type: application/x-msdownload
       - name: Publish release
         uses: StuYarrow/publish-release@v1.1.2
