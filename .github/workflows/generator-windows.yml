@@ -425,3 +425,46 @@ jobs:
         continue-on-error: true
         run: |
           mv ./SignOutput/rustdesk.msi "./SignOutput/mindfieldconnect.msi" || echo "rustdesk"
+          - name: Get current date
+          id: date
+          uses: Kaven-Universe/github-action-current-date-time@v1
+          with:
+            format: "YYYY_MM_DD HH_mm_ss"
+            
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.VERSION }}
+          release_name: ${{ env.VERSION }} - Windows -  ${{ steps.date.outputs.time }}
+          body: |
+            Artifact from Windows RD build
+          draft: true
+          prerelease: false
+      - name: Upload release asset MSI
+        continue-on-error: true
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./SignOutput/${{ inputs.filename }}.msi
+          asset_name: ${{ inputs.filename }}.msi
+          asset_content_type: application/x-msi
+      - name: Upload release asset EXE
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./SignOutput/${{ inputs.filename }}.exe
+          asset_name: ${{ inputs.filename }}.exe
+          asset_content_type: application/x-msdownload
+      - name: Publish release
+        uses: StuYarrow/publish-release@v1.1.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          id: ${{ steps.create_release.outputs.id }}
