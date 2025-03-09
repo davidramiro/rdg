@@ -139,7 +139,6 @@ jobs:
           
 
       - name: change company name
-        if: fromJson(inputs.extras).compname != 'Purslane Ltd'
         continue-on-error: true
         shell: bash
         run: |
@@ -430,7 +429,7 @@ jobs:
           uses: Kaven-Universe/github-action-current-date-time@v1
           with:
             format: "YYYY_MM_DD HH_mm_ss"
-            
+
       - name: Create release
         id: create_release
         uses: actions/create-release@v1
